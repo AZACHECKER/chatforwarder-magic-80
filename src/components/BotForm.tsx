@@ -114,7 +114,6 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             );
             
             for (const msg of newMessages) {
-              // Save to database here
               setBotInfo(prev => ({
                 ...prev,
                 lastProcessedId: msg.message.message_id,
