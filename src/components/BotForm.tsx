@@ -3,30 +3,35 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DataTable } from '@/components/DataTable';
+import { Terminal, Database } from "lucide-react";
 import { DraggableWindow } from "./windows/DraggableWindow";
-import { DesktopIcon } from "./windows/DesktopIcon";
-import { Terminal, Database, Bug } from "lucide-react";
+import { MessageTable } from "./MessageTable";
+import { saveBotData, getBotMessages, forwardMessage, BotMessage } from "@/utils/botDataService";
 
 export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => void }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isWindowVisible, setIsWindowVisible] = useState(true);
   const [dbStatus, setDbStatus] = useState("Отключено");
   const [isForwarding, setIsForwarding] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [messages, setMessages] = useState<BotMessage[]>([]);
   const { toast } = useToast();
+  
   const [botInfo, setBotInfo] = useState({
     apiKey: '',
     botName: '',
     senderChatId: '',
-    senderChatName: '',
     receiverChatId: '',
-    receiverChatName: '',
     messageId: '',
     textMessage: '',
     lastProcessedId: 0
   });
+  
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMessages(getBotMessages());
+  }, []);
 
   const fetchBotName = async (apiKey: string) => {
     try {
@@ -41,7 +46,6 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
           title: "Успех",
           description: "Бот успешно найден",
         });
-        // After successful bot verification, start getting updates
         await getUpdates(apiKey);
       } else {
         setError(data.description || "Неавторизованный доступ");
@@ -69,11 +73,30 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
       const data = await response.json();
       
       if (data.ok && data.result.length > 0) {
-        const lastMessage = data.result[data.result.length - 1];
+        const messages = data.result;
+        let processedCount = 0;
+        
+        for (const msg of messages) {
+          const savedMessage = saveBotData({
+            apiKey,
+            senderChatId: msg.message.chat.id.toString(),
+            receiverChatId: botInfo.receiverChatId,
+            messageId: msg.message.message_id.toString(),
+            textMessage: msg.message.text || ''
+          });
+          
+          processedCount++;
+          setProgress((processedCount / messages.length) * 100);
+          
+          if (botInfo.receiverChatId) {
+            await forwardMessage(apiKey, msg.message.text || '', botInfo.receiverChatId);
+          }
+        }
+        
+        setMessages(getBotMessages());
         setBotInfo(prev => ({
           ...prev,
-          messageId: lastMessage.message.message_id.toString(),
-          lastProcessedId: lastMessage.message.message_id
+          lastProcessedId: messages[messages.length - 1].message.message_id
         }));
       }
     } catch (error) {
@@ -81,9 +104,10 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
     }
   };
 
-  const toggleForwarding = () => {
+  const toggleForwarding = async () => {
     setIsForwarding(!isForwarding);
-    if (!isForwarding) {
+    if (!isForwarding && botInfo.apiKey && botInfo.receiverChatId) {
+      await getUpdates(botInfo.apiKey);
       toast({
         title: "Пересылка запущена",
         description: "Начинаем пересылку сообщений",
@@ -96,80 +120,28 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
     }
   };
 
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized);
-  };
-
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isForwarding && botInfo.apiKey && botInfo.senderChatId && botInfo.receiverChatId) {
+    if (isForwarding && botInfo.apiKey && botInfo.receiverChatId) {
       interval = setInterval(async () => {
-        try {
-          const response = await fetch(`https://api.telegram.org/bot${botInfo.apiKey}/getUpdates`);
-          const data = await response.json();
-          
-          if (data.ok && data.result.length > 0) {
-            const newMessages = data.result.filter(
-              (msg: any) => msg.message.message_id > botInfo.lastProcessedId
-            );
-            
-            for (const msg of newMessages) {
-              setBotInfo(prev => ({
-                ...prev,
-                lastProcessedId: msg.message.message_id,
-                messageId: msg.message.message_id.toString(),
-                textMessage: msg.message.text || ''
-              }));
-            }
-          }
-        } catch (error) {
-          console.error("Error in forwarding loop:", error);
-        }
+        await getUpdates(botInfo.apiKey);
       }, 3000);
     }
     
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isForwarding, botInfo.apiKey, botInfo.senderChatId, botInfo.receiverChatId, botInfo.lastProcessedId]);
-
-  const handleMinimize = () => {
-    setIsMinimized(true);
-    setTimeout(() => setIsWindowVisible(false), 300);
-  };
-
-  const handleMaximize = () => {
-    // Handle maximize state in DraggableWindow component
-  };
-
-  const handleClose = () => {
-    setIsWindowVisible(false);
-  };
-
-  const handleIconClick = () => {
-    setIsWindowVisible(true);
-    setIsMinimized(false);
-  };
-
-  if (!isWindowVisible) {
-    return (
-      <DesktopIcon
-        onClick={handleIconClick}
-        title="Bot Forwarder"
-        icon="/favicon.ico"
-      />
-    );
-  }
+  }, [isForwarding, botInfo.apiKey, botInfo.receiverChatId]);
 
   return (
     <DraggableWindow
       title="Telegram Bot Forwarder"
       isMinimized={isMinimized}
-      onMinimize={handleMinimize}
-      onMaximize={handleMaximize}
-      onClose={handleClose}
-      icon={<Terminal className="w-5 h-5 text-[#9b87f5]" />}
-      className="bg-[#221F26] text-[#D6BCFA]"
+      onMinimize={() => setIsMinimized(true)}
+      onMaximize={() => {}}
+      onClose={() => setIsWindowVisible(false)}
+      icon="/favicon.ico"
+      className="bg-[#221F26] text-[#D6BCFA] w-[1000px]"
     >
       <div className="space-y-6 p-6">
         <div className="flex justify-between items-center mb-6">
@@ -199,15 +171,12 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="font-montserrat flex items-center gap-2">
-                <Bug className="w-4 h-4 text-[#9b87f5]" />
-                API Ключ
-              </label>
+              <label className="font-montserrat">API Ключ</label>
               <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
                 placeholder="Введите API ключ Telegram бота"
                 value={botInfo.apiKey}
                 onChange={(e) => {
@@ -217,25 +186,12 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
                   }
                 }}
               />
-              {botInfo.botName && (
-                <p className="text-sm font-montserrat text-[#8E9196]">Имя бота: {botInfo.botName}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-montserrat">ID Чата отправителя</label>
-              <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
-                placeholder="Введите ID чата отправителя"
-                value={botInfo.senderChatId}
-                onChange={(e) => setBotInfo(prev => ({ ...prev, senderChatId: e.target.value }))}
-              />
             </div>
 
             <div className="space-y-2">
               <label className="font-montserrat">ID Чата получателя</label>
               <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
                 placeholder="Введите ID чата получателя"
                 value={botInfo.receiverChatId}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, receiverChatId: e.target.value }))}
@@ -243,52 +199,21 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="font-montserrat">ID Сообщения (необязательно)</label>
-              <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
-                placeholder="ID сообщения"
-                value={botInfo.messageId}
-                onChange={(e) => setBotInfo(prev => ({ ...prev, messageId: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-montserrat">Текст сообщения (необязательно)</label>
-              <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
-                placeholder="Текст сообщения"
-                value={botInfo.textMessage}
-                onChange={(e) => setBotInfo(prev => ({ ...prev, textMessage: e.target.value }))}
-              />
-            </div>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="win98-button w-full bg-[#221F26] border-[#9b87f5] text-[#D6BCFA] hover:bg-[#2a2533]">
-                  Управление данными
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="win98-window sm:max-w-[900px] bg-[#221F26] border-[#9b87f5]">
-                <DialogHeader>
-                  <DialogTitle className="text-[#D6BCFA]">Управление данными</DialogTitle>
-                </DialogHeader>
-                <DataTable />
-              </DialogContent>
-            </Dialog>
-
-            {isForwarding && (
-              <div className="mt-4">
-                <div className="w-full bg-[#2a2533] rounded-full h-2.5">
-                  <div className="bg-[#9b87f5] h-2.5 rounded-full animate-pulse" style={{ width: '50%' }}></div>
-                </div>
-                <p className="text-sm text-[#8E9196] mt-2">
-                  Последний обработанный ID: {botInfo.lastProcessedId}
-                </p>
+          {isForwarding && (
+            <div className="mt-4">
+              <div className="w-full bg-[#2a2533] rounded-full h-2.5">
+                <div 
+                  className="bg-[#9b87f5] h-2.5 rounded-full transition-all" 
+                  style={{ width: `${progress}%` }}
+                ></div>
               </div>
-            )}
-          </div>
+              <p className="text-sm text-[#8E9196] mt-2">
+                Прогресс: {Math.round(progress)}%
+              </p>
+            </div>
+          )}
+
+          <MessageTable messages={messages} />
         </div>
       </div>
     </DraggableWindow>
