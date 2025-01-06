@@ -3,8 +3,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DataTable } from '@/components/DataTable';
 import { DraggableWindow } from "./windows/DraggableWindow";
 import { DesktopIcon } from "./windows/DesktopIcon";
+import { Terminal, Database, Bug } from "lucide-react";
 
 export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => void }) => {
   const [isMinimized, setIsMinimized] = useState(false);
@@ -166,19 +169,24 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
       onMinimize={handleMinimize}
       onMaximize={handleMaximize}
       onClose={handleClose}
+      icon={<Terminal className="w-5 h-5 text-[#9b87f5]" />}
+      className="bg-[#221F26] text-[#D6BCFA]"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <div className="flex justify-between items-center mb-6">
-          <span className="font-montserrat">Статус БД: {dbStatus}</span>
+          <span className="font-montserrat flex items-center gap-2">
+            <Database className="w-4 h-4 text-[#9b87f5]" />
+            Статус БД: {dbStatus}
+          </span>
           <div className="space-x-4">
             <button 
-              className="win98-button"
+              className="win98-button bg-[#221F26] border-[#9b87f5] text-[#D6BCFA] hover:bg-[#2a2533]"
               onClick={() => setDbStatus(prev => prev === "Отключено" ? "Подключено" : "Отключено")}
             >
               {dbStatus === "Отключено" ? "Подключить" : "Отключить"}
             </button>
             <button 
-              className={`win98-button ${isForwarding ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+              className={`win98-button ${isForwarding ? 'bg-[#ea384c]' : 'bg-[#9b87f5]'} text-white`}
               onClick={toggleForwarding}
             >
               {isForwarding ? 'Остановить' : 'Начать'} пересылку
@@ -187,17 +195,20 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
         </div>
 
         {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="bg-[#2a2533] border-[#ea384c]">
+            <AlertDescription className="text-[#ea384c]">{error}</AlertDescription>
           </Alert>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="font-montserrat">API Ключ</label>
+              <label className="font-montserrat flex items-center gap-2">
+                <Bug className="w-4 h-4 text-[#9b87f5]" />
+                API Ключ
+              </label>
               <Input
-                className="win98-input h-12 text-lg"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
                 placeholder="Введите API ключ Telegram бота"
                 value={botInfo.apiKey}
                 onChange={(e) => {
@@ -208,14 +219,14 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
                 }}
               />
               {botInfo.botName && (
-                <p className="text-sm font-montserrat">Имя бота: {botInfo.botName}</p>
+                <p className="text-sm font-montserrat text-[#8E9196]">Имя бота: {botInfo.botName}</p>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="font-montserrat">ID Чата отправителя</label>
               <Input
-                className="win98-input h-12 text-lg"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
                 placeholder="Введите ID чата отправителя"
                 value={botInfo.senderChatId}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, senderChatId: e.target.value }))}
@@ -225,7 +236,7 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             <div className="space-y-2">
               <label className="font-montserrat">ID Чата получателя</label>
               <Input
-                className="win98-input h-12 text-lg"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
                 placeholder="Введите ID чата получателя"
                 value={botInfo.receiverChatId}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, receiverChatId: e.target.value }))}
@@ -237,7 +248,7 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             <div className="space-y-2">
               <label className="font-montserrat">ID Сообщения (необязательно)</label>
               <Input
-                className="win98-input h-12 text-lg"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
                 placeholder="ID сообщения"
                 value={botInfo.messageId}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, messageId: e.target.value }))}
@@ -247,19 +258,33 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             <div className="space-y-2">
               <label className="font-montserrat">Текст сообщения (необязательно)</label>
               <Input
-                className="win98-input h-12 text-lg"
+                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA] placeholder-[#8E9196]"
                 placeholder="Текст сообщения"
                 value={botInfo.textMessage}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, textMessage: e.target.value }))}
               />
             </div>
 
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="win98-button w-full bg-[#221F26] border-[#9b87f5] text-[#D6BCFA] hover:bg-[#2a2533]">
+                  Управление данными
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="win98-window sm:max-w-[900px] bg-[#221F26] border-[#9b87f5]">
+                <DialogHeader>
+                  <DialogTitle className="text-[#D6BCFA]">Управление данными</DialogTitle>
+                </DialogHeader>
+                <DataTable />
+              </DialogContent>
+            </Dialog>
+
             {isForwarding && (
               <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '50%' }}></div>
+                <div className="w-full bg-[#2a2533] rounded-full h-2.5">
+                  <div className="bg-[#9b87f5] h-2.5 rounded-full animate-pulse" style={{ width: '50%' }}></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-[#8E9196] mt-2">
                   Последний обработанный ID: {botInfo.lastProcessedId}
                 </p>
               </div>

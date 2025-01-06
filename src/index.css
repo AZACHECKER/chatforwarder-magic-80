@@ -30,7 +30,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
 .win98-window {
-  @apply bg-gray-200 border-2 border-gray-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] transition-all duration-300;
+  @apply bg-[#221F26] border-2 border-[#9b87f5] shadow-[2px_2px_0px_0px_rgba(155,135,245,0.2)] transition-all duration-300;
   min-width: 320px;
   max-width: 90vw;
   max-height: 90vh;
@@ -38,19 +38,19 @@
 }
 
 .win98-titlebar {
-  @apply bg-[#000080] text-white px-2 py-1 flex justify-between items-center select-none;
+  @apply bg-[#2a2533] text-[#D6BCFA] px-2 py-1 flex justify-between items-center select-none;
 }
 
 .win98-button {
-  @apply bg-gray-200 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-800 px-4 py-1 active:border-t-gray-800 active:border-l-gray-800 active:border-b-white active:border-r-white transition-colors;
+  @apply bg-[#221F26] border-2 border-[#9b87f5] px-4 py-1 text-[#D6BCFA] hover:bg-[#2a2533] transition-colors;
 }
 
 .win98-input {
-  @apply bg-white/70 backdrop-blur-sm border border-gray-400 px-3 py-1 transition-all duration-200 focus:border-[#000080];
+  @apply bg-[#2a2533] backdrop-blur-sm border border-[#9b87f5] px-3 py-1 text-[#D6BCFA] transition-all duration-200 focus:border-[#0FA0CE];
 }
 
 .win98-icon {
-  @apply flex flex-col items-center text-center cursor-pointer p-2 hover:bg-blue-200/50 transition-colors duration-200;
+  @apply flex flex-col items-center text-center p-2 hover:bg-[#2a2533]/50 transition-colors duration-200 rounded border border-transparent hover:border-[#9b87f5];
 }
 
 .minimize-animation {
