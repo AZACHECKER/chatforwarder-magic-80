@@ -141,23 +141,23 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
       onMaximize={() => {}}
       onClose={() => setIsWindowVisible(false)}
       icon="/favicon.ico"
-      className="bg-[#221F26] text-[#D6BCFA] w-[1000px]"
+      className="bg-[#221F26] text-[#D6BCFA]"
     >
-      <div className="space-y-6 p-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="space-y-6 p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
           <span className="font-montserrat flex items-center gap-2">
             <Database className="w-4 h-4 text-[#9b87f5]" />
             Статус БД: {dbStatus}
           </span>
-          <div className="space-x-4">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4">
             <button 
-              className="win98-button bg-[#221F26] border-[#9b87f5] text-[#D6BCFA] hover:bg-[#2a2533]"
+              className="win98-button bg-[#221F26] border-[#9b87f5] text-[#D6BCFA] hover:bg-[#2a2533] w-full md:w-auto"
               onClick={() => setDbStatus(prev => prev === "Отключено" ? "Подключено" : "Отключено")}
             >
               {dbStatus === "Отключено" ? "Подключить" : "Отключить"}
             </button>
             <button 
-              className={`win98-button ${isForwarding ? 'bg-[#ea384c]' : 'bg-[#9b87f5]'} text-white`}
+              className={`win98-button ${isForwarding ? 'bg-[#ea384c]' : 'bg-[#9b87f5]'} text-white w-full md:w-auto`}
               onClick={toggleForwarding}
             >
               {isForwarding ? 'Остановить' : 'Начать'} пересылку
@@ -171,12 +171,12 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 gap-8">
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:gap-8">
+          <div className="space-y-4 md:space-y-6">
             <div className="space-y-2">
               <label className="font-montserrat">API Ключ</label>
               <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
+                className="win98-input h-10 md:h-12 text-base md:text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
                 placeholder="Введите API ключ Telegram бота"
                 value={botInfo.apiKey}
                 onChange={(e) => {
@@ -191,7 +191,7 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             <div className="space-y-2">
               <label className="font-montserrat">ID Чата получателя</label>
               <Input
-                className="win98-input h-12 text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
+                className="win98-input h-10 md:h-12 text-base md:text-lg bg-[#2a2533] border-[#9b87f5] text-[#D6BCFA]"
                 placeholder="Введите ID чата получателя"
                 value={botInfo.receiverChatId}
                 onChange={(e) => setBotInfo(prev => ({ ...prev, receiverChatId: e.target.value }))}
@@ -213,7 +213,9 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
             </div>
           )}
 
-          <MessageTable messages={messages} />
+          <div className="overflow-x-auto">
+            <MessageTable messages={messages} />
+          </div>
         </div>
       </div>
     </DraggableWindow>
