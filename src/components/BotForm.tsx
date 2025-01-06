@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DraggableWindow } from "./windows/DraggableWindow";
+import { DesktopIcon } from "./windows/DesktopIcon";
 
 export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => void }) => {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isWindowVisible, setIsWindowVisible] = useState(true);
   const [dbStatus, setDbStatus] = useState("Отключено");
   const [isForwarding, setIsForwarding] = useState(false);
   const { toast } = useToast();
@@ -128,21 +131,43 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
     };
   }, [isForwarding, botInfo.apiKey, botInfo.senderChatId, botInfo.receiverChatId, botInfo.lastProcessedId]);
 
-  return (
-    <div className={`win98-window max-w-4xl mx-auto ${isMinimized ? 'minimize-animation' : 'maximize-animation'}`}>
-      <div className="win98-titlebar">
-        <div className="flex items-center gap-2">
-          <img src="/favicon.ico" alt="icon" className="w-4 h-4" />
-          <span className="font-montserrat">Telegram Bot Forwarder</span>
-        </div>
-        <div className="flex gap-1">
-          <button onClick={toggleMinimize} className="px-2 hover:bg-blue-700">_</button>
-          <button className="px-2 hover:bg-blue-700">□</button>
-          <button className="px-2 hover:bg-blue-700">×</button>
-        </div>
-      </div>
+  const handleMinimize = () => {
+    setIsMinimized(true);
+    setTimeout(() => setIsWindowVisible(false), 300);
+  };
 
-      <div className="p-6 space-y-6">
+  const handleMaximize = () => {
+    // Handle maximize state in DraggableWindow component
+  };
+
+  const handleClose = () => {
+    setIsWindowVisible(false);
+  };
+
+  const handleIconClick = () => {
+    setIsWindowVisible(true);
+    setIsMinimized(false);
+  };
+
+  if (!isWindowVisible) {
+    return (
+      <DesktopIcon
+        onClick={handleIconClick}
+        title="Bot Forwarder"
+        icon="/favicon.ico"
+      />
+    );
+  }
+
+  return (
+    <DraggableWindow
+      title="Telegram Bot Forwarder"
+      isMinimized={isMinimized}
+      onMinimize={handleMinimize}
+      onMaximize={handleMaximize}
+      onClose={handleClose}
+    >
+      <div className="space-y-6">
         <div className="flex justify-between items-center mb-6">
           <span className="font-montserrat">Статус БД: {dbStatus}</span>
           <div className="space-x-4">
@@ -231,8 +256,8 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
 
             {isForwarding && (
               <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '50%' }}></div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '50%' }}></div>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
                   Последний обработанный ID: {botInfo.lastProcessedId}
@@ -242,6 +267,6 @@ export const BotForm = ({ setIsLoading }: { setIsLoading: (loading: boolean) => 
           </div>
         </div>
       </div>
-    </div>
+    </DraggableWindow>
   );
 };
