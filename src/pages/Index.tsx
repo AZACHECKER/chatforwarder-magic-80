@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTable } from '@/components/DataTable';
 import { BotForm } from '@/components/BotForm';
@@ -11,31 +10,25 @@ const Index = () => {
   const { toast } = useToast();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8 fade-in">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Message Forwarder
-          </h1>
-          <p className="mt-3 text-lg text-gray-500">
-            Seamlessly forward messages between Telegram chats
-          </p>
+    <div className="min-h-screen bg-[#008080] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="win98-icon">
+          <img src="/favicon.ico" alt="App Icon" className="w-8 h-8" />
+          <span className="text-white text-sm mt-1">Bot Forwarder</span>
         </div>
 
-        <div className="glass-panel rounded-xl p-6 sm:p-8">
-          <BotForm setIsLoading={setIsLoading} />
-        </div>
+        <BotForm setIsLoading={setIsLoading} />
 
         <div className="flex justify-center gap-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="btn-secondary">
-                Manage Data
+              <Button variant="outline" className="win98-button">
+                Управление данными
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[900px]">
+            <DialogContent className="win98-window sm:max-w-[900px]">
               <DialogHeader>
-                <DialogTitle>Data Management</DialogTitle>
+                <DialogTitle>Управление данными</DialogTitle>
               </DialogHeader>
               <DataTable />
             </DialogContent>
@@ -43,25 +36,25 @@ const Index = () => {
           
           <Button 
             variant="default" 
-            className="btn-primary"
+            className="win98-button"
             onClick={() => {
               setIsLoading(true);
               setTimeout(() => {
                 setIsLoading(false);
                 toast({
-                  title: "Message Forwarded",
-                  description: "Your message has been successfully forwarded.",
+                  title: "Сообщение переслано",
+                  description: "Ваше сообщение успешно переслано.",
                 });
               }, 1500);
             }}
           >
-            Forward Message
+            Переслать сообщение
           </Button>
         </div>
 
         {isLoading && (
-          <div className="w-full bg-gray-200 rounded-full h-1">
-            <div className="bg-gray-900 h-1 rounded-full transition-all duration-300" 
+          <div className="w-full bg-gray-200 rounded-none border border-gray-400">
+            <div className="bg-[#000080] h-2 transition-all duration-300" 
                  style={{ width: '50%' }}></div>
           </div>
         )}
